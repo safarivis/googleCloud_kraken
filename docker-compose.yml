@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  trading_bot:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: trading_bot
+    env_file: .env
+    environment:
+      - TZ=UTC
+      - PYTHONPATH=/app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'  # Reduced for free tier
+          memory: 768M # Reduced for free tier
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - trading_network
+
+networks:
+  trading_network:
+    driver: bridge
